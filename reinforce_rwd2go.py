@@ -127,21 +127,26 @@ def reinforce_rwd2go_2(env, policy, optimizer, early_stop=False, n_episodes=1000
 
         if e % print_every == 0:
             print(f"Ep {e}\tavg100: {np.mean(scores_deque):.2f}")
+            
         if (not intermediate_mean_found) and len(scores)>10 and np.mean(scores[-10:]) >= half_reward:
             intermediate_mean_found = True
             torch.save(policy.state_dict(), f"policy2_with_mean.pth")
-            print(f"Half target policy saved at ep {e} (mean reward over 10 last ep ={np.mean(scores[-10:]):.1f}, avg={np.mean(scores_deque):.1f})")
+            print(f"Half target policy saved at ep {e} with mean reward = {np.mean(scores[-10:]):.1f} over 10 last ep and avg={np.mean(scores_deque):.1f})")
+            intermediate_step_mean = e
+            
         if (not intermediate_max_found) and ep_return >= half_reward:
             intermediate_max_found = True
             torch.save(policy.state_dict(), f"policy2_with_max.pth")
-            print(f"Half target policy saved at ep {e} (reward={ep_return:.1f}, avg={np.mean(scores_deque):.1f})")
+            print(f"Half target policy saved at ep {e} with reward={ep_return:.1f} and avg={np.mean(scores_deque):.1f}")
+            intermediate_step_max = e
             
         if len(scores_deque) == scores_deque.maxlen and np.mean(scores_deque) >= near_max_reward:
             torch.save(policy.state_dict(), f"policy1.pth")
             print(f"Reached converged policy to max reward at ep {e} (avg={np.mean(scores_deque):.1f})")
+            converged_step = e
             break
             
-    return scores
+    return scores, intermediate_step_max, intermediate_step_mean, converged_step
 
 import math, random, copy
 

@@ -7,7 +7,7 @@ from torch.distributions import Categorical
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def getPolicy(ENV_NAME):
-    if ENV_NAME == "CartPole-v0" or ENV_NAME == "CartPole-v0":
+    if ENV_NAME == "CartPole-v0" or ENV_NAME == "CartPole-v1":
         return PolicyCartPole()
 
 class PolicyCartPole(nn.Module):
