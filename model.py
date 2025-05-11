@@ -6,16 +6,19 @@ from torch.distributions import Categorical
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-class Policy(nn.Module):
-    def __init__(self, state_size=4, action_size=2, hidden_size=32):
-        super(Policy, self).__init__()
-        self.fc1 = nn.Linear(state_size, hidden_size)
-        self.fc2 = nn.Linear(hidden_size, action_size)
+def getPolicy(ENV_NAME):
+    if ENV_NAME == "CartPole-v0" or ENV_NAME == "CartPole-v0":
+        return PolicyCartPole()
+
+class PolicyCartPole(nn.Module):
+    def __init__(self, hidden_size=32):
+        super(PolicyCartPole, self).__init__()
+        self.fc1 = nn.Linear(4, hidden_size)
+        self.fc2 = nn.Linear(hidden_size, 2)
 
     def forward(self, state):
         x = F.relu(self.fc1(state))
         x = self.fc2(x)
-        # we just consider 1 dimensional probability of action
         return F.softmax(x, dim=1)
 
     def act(self, state):
