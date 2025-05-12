@@ -129,7 +129,7 @@ def reinforce_rwd2go_2(env, policy, optimizer, early_stop=False, n_episodes=1000
         if e % print_every == 0:
             print(f"Ep {e}\tavg100: {np.mean(scores_deque):.2f}")
             
-        if (not intermediate_mean_found) and len(scores)>10 and np.mean(scores[-10:]) >= half_reward:
+        if (not intermediate_mean_found) and ep_return <=140 and np.mean(scores[-10:]) >= half_reward:
             intermediate_mean_found = True
             torch.save(policy.state_dict(), f"policies/policy2_with_mean.pth")
             print(f"Half target policy saved at ep {e} with mean reward = {np.mean(scores[-10:]):.1f} over 10 last ep and avg={np.mean(scores_deque):.1f})")
