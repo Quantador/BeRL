@@ -22,7 +22,7 @@ import glob
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-def reinforce_rwd2go_PPO_RLHF(env, policy, optimizer, reward_model, early_stop=False, n_episodes=1000, max_t=1000, gamma=1.0, print_every=100, target_reward=195):
+def reinforce_rwd2go_PPO_RLHF(env, policy, optimizer, reward_model, early_stop=False, n_episodes=1000, max_t=1000, gamma=1.0, print_every=100, target_reward=-90):
     target_achieved_row = 0
 
     scores_deque = deque(maxlen=100)
