@@ -20,71 +20,17 @@ from IPython.display import HTML
 from IPython import display
 import glob
 
-# reward-to-go REINFORCE
-# --> with gradient estimator according to version 2 of the PG theorem (not using Q-values, but reward to go)
-def reinforce_rwd2go(env, policy, optimizer, early_stop=False, n_episodes=1000, max_t=1000, gamma=1.0, print_every=100, target_reward=None, row_target=5, near_max_reward=200):
-    target_achieved_row = 0
-
-    scores_deque = deque(maxlen=100)
-    scores = []
-    for e in range(1, n_episodes):
-        state = env.reset()
-        saved_log_probs, rewards = [], []
-        
-        # Collect trajectory
-        for t in range(max_t):
-            # Sample the action from current policy
-            action, log_prob = policy.act(state)
-            saved_log_probs.append(log_prob)
-            state, reward, done, _ = env.step(action)
-            rewards.append(reward)
-            if done:
-                break
-                
-        # Calculate total expected reward
-        scores_deque.append(sum(rewards))
-        scores.append(sum(rewards))
-
-        # Recalculate the total reward applying discounted factor
-        discounts = [gamma ** i for i in range(len(rewards) + 1)]
-        rewards_to_go = [sum([discounts[j]*rewards[j+t] for j in range(len(rewards)-t) ]) for t in range(len(rewards))]
-
-        # Calculate the loss
-        policy_loss = []
-        for i in range(len(saved_log_probs)):
-            log_prob = saved_log_probs[i]
-            G = rewards_to_go[i]
-            # Note that we are using Gradient Ascent, not Descent. So we need to calculate it with negative rewards.
-            policy_loss.append(-log_prob * G)
-        # After that, we concatenate whole policy loss in 0th dimension
-        policy_loss = torch.cat(policy_loss).sum()
-
-        # Backpropagation
-        optimizer.zero_grad()
-        policy_loss.backward()
-        optimizer.step()
-
-        if e % print_every == 0:
-            print(f"Ep {e}\tavg100: {np.mean(scores_deque):.2f}")
-        if target_reward is not None and len(scores_deque)==100:
-            if np.max(scores_deque) >= target_reward:
-                target_achieved_row += 1
-                if target_achieved_row >= row_target:
-                    print(f"Reached target {target_reward:.1f} at ep {e} (avg={np.mean(scores_deque):.1f})")
-                    break
-            else:
-                target_achieved_row = 0
-        elif target_reward is None and np.mean(scores_deque) >= near_max_reward:
-            print(f"Solved {near_max_reward} at ep {e} (avg={np.mean(scores_deque):.1f})")
-            break
-    return scores
-
 def reinforce_rwd2go_2(env, policy, optimizer, early_stop=False, n_episodes=1000, max_t=1000, gamma=1.0, print_every=100, row_target=5, near_max_reward=200):
     target_achieved_row = 0
     half_reward = 0.5 * near_max_reward
     intermediate_mean_found = False
-    intermediate_max_found = False
+    intermediate_point_found = False
+    intermediate_both_found = False
     env_name = env.spec.id
+    intermediate_step_both = None
+    intermediate_step_mean = None
+    intermediate_step_point = None
+    converged_step = None
 
     scores_deque = deque(maxlen=100)
     scores = []
@@ -129,17 +75,23 @@ def reinforce_rwd2go_2(env, policy, optimizer, early_stop=False, n_episodes=1000
         if e % print_every == 0:
             print(f"Ep {e}\tavg100: {np.mean(scores_deque):.2f}")
             
-        if (not intermediate_mean_found) and ep_return <=105 and np.mean(scores[-10:]) >= half_reward:
+        if (not intermediate_both_found) and ep_return <=110 and np.mean(scores[-10:]) >= half_reward:
+            intermediate_both_found = True
+            torch.save(policy.state_dict(), f"policies/policy2_with_both.pth")
+            print(f"(Current-Mean) Half target policy saved at ep {e} with mean reward = {np.mean(scores[-10:]):.1f} over 10 last ep and avg={np.mean(scores_deque):.1f})")
+            intermediate_step_both = e
+
+        if (not intermediate_mean_found) and np.mean(scores[-10:]) >= half_reward:
             intermediate_mean_found = True
             torch.save(policy.state_dict(), f"policies/policy2_with_mean.pth")
-            print(f"Half target policy saved at ep {e} with mean reward = {np.mean(scores[-10:]):.1f} over 10 last ep and avg={np.mean(scores_deque):.1f})")
+            print(f"(Mean) Half target policy saved at ep {e} with mean reward = {np.mean(scores[-10:]):.1f} over 10 last ep and avg={np.mean(scores_deque):.1f})")
             intermediate_step_mean = e
             
-        if (not intermediate_max_found) and ep_return >= half_reward:
-            intermediate_max_found = True
-            torch.save(policy.state_dict(), f"policies/policy2_with_max.pth")
-            print(f"Half target policy saved at ep {e} with reward={ep_return:.1f} and avg={np.mean(scores_deque):.1f}")
-            intermediate_step_max = e
+        if (not intermediate_point_found) and ep_return >= half_reward:
+            intermediate_point_found = True
+            torch.save(policy.state_dict(), f"policies/policy2_with_point.pth")
+            print(f"(Current) Half target policy saved at ep {e} with reward={ep_return:.1f} and avg={np.mean(scores_deque):.1f}")
+            intermediate_step_point = e
             
         if len(scores_deque) == scores_deque.maxlen and np.mean(scores_deque) >= near_max_reward:
             torch.save(policy.state_dict(), f"policies/policy1.pth")
@@ -147,7 +99,7 @@ def reinforce_rwd2go_2(env, policy, optimizer, early_stop=False, n_episodes=1000
             converged_step = e
             break
             
-    return scores, intermediate_step_max, intermediate_step_mean, converged_step
+    return scores, intermediate_step_point, intermediate_step_mean, intermediate_step_both, converged_step
 
 import math, random, copy
 

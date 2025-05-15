@@ -20,8 +20,13 @@ from IPython.display import HTML
 from IPython import display
 import glob
 
-def reinforce_rwd2go_PPO_RLHF(env, policy, optimizer, reward_model, early_stop=False, n_episodes=1000, max_t=1000, gamma=1.0, print_every=100, target_reward=195):
+def reinforce_rwd2go_PPO_RLHF(env, policy, optimizer, reward_model, early_stop=False, n_episodes=1000, max_t=1000, gamma=1.0, print_every=100, target_reward=195, reward_evaluation_every=10):
     target_achieved_row = 0
+    random.seed(42)
+
+    losses = []
+    mean_returns = []
+    std_returns = []
 
     scores_deque = deque(maxlen=100)
     scores_env_deque = deque(maxlen=100)
@@ -67,9 +72,32 @@ def reinforce_rwd2go_PPO_RLHF(env, policy, optimizer, reward_model, early_stop=F
         policy_loss.backward()
         optimizer.step()
 
+        if e % reward_evaluation_every == 0:
+            returns = []
+            for _ in range(3):
+                seed = random.randint(0, 100000)
+                state, done, total_r = env.reset(seed=seed), False, 0.0
+                while not done:
+                    with torch.no_grad():
+                        action, _ = policy.act(state)
+                    state, r, done, _ = env.step(action)
+                    total_r += r
+                returns.append(total_r)
+
+            returns = np.array(returns)
+
+            mean_returns.append(returns.mean())
+            std_returns.append(returns.std())
+            losses.append(policy_loss.detach().numpy().item())
+                
+
         if e % print_every == 0:
             print(f"Ep {e}\tavg100: {np.mean(scores_env_deque):.2f}")
         elif target_reward is None:
             print(f"Solved at ep {e} (avg={np.mean(scores_env_deque):.1f})")
             break
-    return scores
+
+    mean_returns = np.array(mean_returns)
+    std_returns = np.array(std_returns)
+
+    return losses, mean_returns, std_returns
