@@ -93,7 +93,7 @@ def reinforce_rwd2go_PPO_RLHF(env, policy, optimizer, reward_model, early_stop=F
 
         if e % print_every == 0:
             print(f"Ep {e}\tavg100: {np.mean(scores_env_deque):.2f}")
-        elif target_reward is None:
+        elif target_reward is not None and len(scores_deque) == scores_deque.maxlen and np.mean(scores_deque) >= target_reward:
             print(f"Solved at ep {e} (avg={np.mean(scores_env_deque):.1f})")
             break
 
