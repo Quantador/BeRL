@@ -9,23 +9,28 @@ This repository contains reinforcement learning experiments using preference dat
 - `MountainCarContinuous-v0` *(retained for reference but not used)*
 
 ## Project Structure
+
+```
+.
 ├── with-Acrobot-v1
-│ ├── policies/
-│ ├── pref_data/
-│ └──  scripts/
+│   ├── policies/
+│   ├── pref_data/
+│   └── scripts/
 │
 ├── with-CartPole-v0
-│ ├── policies/
-│ ├── pref_data/
-│ └── scripts/
+│   ├── policies/
+│   ├── pref_data/
+│   └── scripts/
 │
-├── with-MountainCarContinuous-v0/
-│ ├── policies/
-│ ├── pref_data/
-│ └── scripts/
+├── with-MountainCarContinuous-v0
+│   ├── policies/
+│   ├── pref_data/
+│   └── scripts/
 │
 ├── .gitignore
 └── README.md
+```
+
 
 
 
@@ -41,5 +46,6 @@ In each environment folder, you typically follow this order:
  
 3. `training_DPO.ipynb`   
    Optimize a our checkpoint policy using Direct Preference Optimization based on the generated trajectories preferences.
+
 
 
