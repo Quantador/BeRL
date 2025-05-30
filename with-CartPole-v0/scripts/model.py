@@ -9,9 +9,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 def getPolicy(ENV_NAME):
     if ENV_NAME == "CartPole-v0" or ENV_NAME == "CartPole-v1":
         return PolicyCartPole()
-    elif ENV_NAME == "MountainCar-v0":
-        return PolicyMountainCar()
-
+    
 class PolicyCartPole(nn.Module):
     def __init__(self, hidden_size=32):
         super(PolicyCartPole, self).__init__()

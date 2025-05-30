@@ -1,4 +1,3 @@
-import gym
 import random, math
 import numpy as np
 from collections import deque
@@ -6,27 +5,13 @@ import matplotlib.pyplot as plt
 plt.rcParams['figure.figsize'] = (16, 10)
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.distributions import Categorical
 torch.manual_seed(0)
 
-import base64, io
-
-# For visualization
-from gym.wrappers.monitoring import video_recorder
-from IPython.display import HTML
-from IPython import display
-import glob
-
-def reinforce_rwd2go_2(env, policy, optimizer, early_stop=False, n_episodes=1000, max_t=1000, gamma=1.0, print_every=100, row_target=5, near_max_reward=200):
-    target_achieved_row = 0
+def reinforce_rwd2go_2(env, policy, optimizer, n_episodes=1000, max_t=1000, gamma=1.0, print_every=100, near_max_reward=200):
     half_reward = 0.5 * near_max_reward
     intermediate_mean_found = False
     intermediate_point_found = False
     intermediate_both_found = False
-    env_name = env.spec.id
     intermediate_step_both = None
     intermediate_step_mean = None
     intermediate_step_point = None
@@ -100,8 +85,6 @@ def reinforce_rwd2go_2(env, policy, optimizer, early_stop=False, n_episodes=1000
             break
             
     return scores, intermediate_step_point, intermediate_step_mean, intermediate_step_both, converged_step
-
-import math, random, copy
 
 def rollout(policy, env, seed, max_t=1000):
     state = env.reset(seed=seed)

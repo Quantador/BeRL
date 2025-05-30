@@ -1,27 +1,13 @@
-import gym
-import random, math
+import random
 import numpy as np
 from collections import deque
 import matplotlib.pyplot as plt
 plt.rcParams['figure.figsize'] = (16, 10)
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.distributions import Categorical
 torch.manual_seed(0)
 
-import base64, io
-
-# For visualization
-from gym.wrappers.monitoring import video_recorder
-from IPython.display import HTML
-from IPython import display
-import glob
-
-def reinforce_rwd2go_PPO_RLHF(env, policy, optimizer, reward_model, early_stop=False, n_episodes=1000, max_t=1000, gamma=1.0, print_every=100, target_reward=195, reward_evaluation_every=10):
-    target_achieved_row = 0
+def reinforce_rwd2go_PPO_RLHF(env, policy, optimizer, reward_model, n_episodes=1000, max_t=1000, gamma=1.0, print_every=100, target_reward=195, reward_evaluation_every=10):
     random.seed(42)
 
     losses = []
@@ -48,7 +34,6 @@ def reinforce_rwd2go_PPO_RLHF(env, policy, optimizer, reward_model, early_stop=F
             if done:
                 break
                 
-        # Calculate total expected reward
         scores_deque.append(sum(rewards))
         scores_env_deque.append(sum(rewards_env))
         scores.append(sum(rewards))
